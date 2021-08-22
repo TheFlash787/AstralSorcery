@@ -57,18 +57,14 @@ public class TransmissionChain {
     }
 
     public static void threadedBuildTransmissionChain(World world, TransmissionWorldHandler handle, IIndependentStarlightSource source, WorldNetworkHandler netHandler, BlockPos sourcePos) {
-        Thread tr = new Thread(() -> {
-            TransmissionChain chain = buildFromSource(netHandler, sourcePos);
-            handle.threadTransmissionChainCallback(world, chain, source, netHandler, sourcePos);
-            AstralSorcery.proxy.scheduleDelayed(() -> {
-                DataLightConnections connections = SyncDataHolder.getDataServer(SyncDataHolder.DATA_LIGHT_CONNECTIONS);
-                connections.updateNewConnectionsThreaded(netHandler.getWorld().provider.getDimension(), chain.getFoundConnections());
-                DataLightBlockEndpoints endpoints = SyncDataHolder.getDataServer(SyncDataHolder.DATA_LIGHT_BLOCK_ENDPOINTS);
-                endpoints.updateNewEndpoints(netHandler.getWorld().provider.getDimension(), chain.resolvedNormalBlockPositions);
-            });
-        });
-        tr.setName("TrChainCalculationThread");
-        tr.start();
+        TransmissionChain chain = buildFromSource(netHandler, sourcePos);
+        handle.threadTransmissionChainCallback(world, chain, source, netHandler, sourcePos);
+        AstralSorcery.proxy.scheduleDelayed(() -> {
+            DataLightConnections connections = SyncDataHolder.getDataServer(SyncDataHolder.DATA_LIGHT_CONNECTIONS);
+            connections.updateNewConnectionsThreaded(netHandler.getWorld().provider.getDimension(), chain.getFoundConnections());
+            DataLightBlockEndpoints endpoints = SyncDataHolder.getDataServer(SyncDataHolder.DATA_LIGHT_BLOCK_ENDPOINTS);
+            endpoints.updateNewEndpoints(netHandler.getWorld().provider.getDimension(), chain.resolvedNormalBlockPositions);
+        }, 1);
     }
 
     private static TransmissionChain buildFromSource(WorldNetworkHandler netHandler, BlockPos at) {
